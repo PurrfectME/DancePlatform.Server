@@ -1,0 +1,8 @@
+{
+    "name": "DancePlatform.Server",
+    "version": "1.0.0",
+    "dependencies": {
+        "express": "^4.17.0",
+        "sequelize": "^6.23.1"
+    }
+}
