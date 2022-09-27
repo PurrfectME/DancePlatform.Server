@@ -1,24 +1,38 @@
 import { DataTypes } from 'sequelize'; 
 
-const Place = {
+const Choreographer = {
     id: {
         type: DataTypes.INTEGER,
         unique: true,
         autoIncrement: true,
         primaryKey: true,
     },
-    studioName: {
+    name: {
         type: DataTypes.STRING,
         allowNull: false,
     },
-    address: {
+    dateOfBirth: {
+        type: DataTypes.DATE,
+        allowNull: false,
+    },
+    description: {
         type: DataTypes.STRING,
+        allowNull: false,
+    },
+    link: {
+        type: DataTypes.STRING,
+        allowNull: false,
+    },
+    style: {
+        type: DataTypes.INTEGER,
         allowNull: false,
     },
     createdBy: {
         type: DataTypes.INTEGER,
         allowNull: false,
     },
-};
+}
 
-export default Place;
+export default Choreographer;
+
+        // public List<Workshop> Workshops { get; set; }

@@ -1,40 +1,39 @@
-import { sequelize } from "../../app";
-import { DataTypes } from "sequelize";
+import databaseContext from "../../DancePlatform.DA/databaseContext.js";
+import { Op } from 'sequelize';
 
-const Place = sequelize.define('Place', {
-    id: {
-        type: DataTypes.INTEGER,
-        allowNull: false,
-        autoIncrement: true,
-        primaryKey: true
-    },
-    studioName: {
-        type: DataTypes.STRING,
-        allowNull: false,
-    },
-    address: {
-        type: DataTypes.STRING,
-        allowNull: false,
-    }
-});
+const getAll = (organizedId) =>
+    databaseContext.Places.findAll({
+        where: {
+            createdBy: {
+                [Op.eq]: organizedId
+            }
+        }
+    });
 
-/*
-[Key]
-        public int Id { get; set; }
-        public string StudioName { get; set; }
-        public string Address { get; set; }
-        public int CreatedBy { get; set; }
+const getById = (id) =>
+    databaseContext.Places.findByPk(id);
 
-        public List<Workshop> Workshops { get; set; }
-*/
+const update = (place) =>
+    databaseContext.Places.update(place, {
+        where: {
+            id: {
+                [Op.eq]: place.id
+            }
+        }
+    });
 
-const getAll = () => {
-    sequelize
-}
+const create = (place) =>
+    databaseContext.Places.create(place);
 
+const deletePlace = (place) =>
+    databaseContext.Places.destroy(place);
 
 const PlaceService = {
-
+    getAll,
+    getById,
+    update,
+    create,
+    deletePlace
 };
 
 export default PlaceService;
