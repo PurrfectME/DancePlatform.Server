@@ -17,6 +17,7 @@ app.get("/", function(request, response){
 
 const placeRouter = express.Router();
 
+// PLACES
 app.get("/place/getAll/:organizerId", (request, response) => {
     PlaceService.getAll(request.params.organizerId).then(x => {response.send(x)});
 });
@@ -24,6 +25,43 @@ app.get("/place/getAll/:organizerId", (request, response) => {
 app.get("/place/get/:id", (request, response) => {
     PlaceService.getById(request.params.id).then(x => {response.send(x)});
 });
+
+app.post("/place/add", (request, response) => {
+    PlaceService.create(request.body).then(x => {response.send(x)});
+});
+
+app.post("/place/update", (request, response) => {
+    PlaceService.getById(request.body.id).then(placeToUpdate => {
+        if(placeToUpdate == null){
+            response.sendStatus(404);
+            return;
+        }
+
+        placeToUpdate.studioName = request.body.studioName;
+        placeToUpdate.address = request.body.address;
+
+        PlaceService.update(placeToUpdate).then(x => {response.send(x)});
+    });
+});
+
+app.post("/place/delete/:id", (request, response) => {
+    PlaceService.getById(request.params.id).then(placeToDelete => {
+        if(placeToDelete == null){
+            response.sendStatus(404);
+            return;
+        }
+
+        PlaceService.deletePlace(placeToDelete).then(x => {response.send(x)});
+    });
+});
+
+//REGISTRATIONS
+
+app.post("registration/add", (req, res) => {
+    
+})
+
+
 
 // начинаем прослушивать подключения на 3000 порту
 app.listen(3000);
