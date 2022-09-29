@@ -16,11 +16,11 @@ const Workshop = {
         allowNull: false,
     },
     date: {
-        type: DataTypes.DATE,
+        type: DataTypes.STRING,
         allowNull: false,
     },
     time: {
-        type: DataTypes.DATE,
+        type: DataTypes.STRING,
         allowNull: false,
     },
     photo: {
@@ -65,13 +65,5 @@ const Workshop = {
     },
 };
 
-
-/*
-        public int PlaceId { get; set; }
-        public Place Place { get; set; }
-        public int ChoreographerId { get; set; }
-        public Choreographer Choreographer { get; set; }
-        public List<Registration> Registrations { get; set; }
-*/
 
 export default Workshop;

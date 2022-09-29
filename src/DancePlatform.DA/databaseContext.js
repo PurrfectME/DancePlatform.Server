@@ -5,7 +5,7 @@ import Choreographer from "../DancePlatform.BL/models/choreographer.js";
 import Registration from "../DancePlatform.BL/models/registration.js";
 import User from "../DancePlatform.BL/models/user.js";
 
-const sequelize = new Sequelize('dance', 'root', 'кщще', {
+const sequelize = new Sequelize('dance', 'root', 'root', {
     host: 'localhost',
     dialect: 'mysql'
 });

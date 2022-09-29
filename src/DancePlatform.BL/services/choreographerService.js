@@ -22,7 +22,11 @@ const getById = id =>
 
 const update = choreographer =>
     databaseContext.Choreographers.update(choreographer, {
-        returning: true
+        where: {
+            id: {
+                [Op.eq]: choreographer.id
+            }
+        },
     });
 
 const ChoreographerService = {

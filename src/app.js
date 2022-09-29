@@ -168,39 +168,74 @@ app.post("/workshop/add", (req, res) => {
     //prepare photo base 64
 
     const request = req.body;
+    console.log(request.photo);
     WorkshopService.create({
         ChoreographerId: request.choreographerId,
         category: request.category,
-        style: request.ctyle,
+        style: request.style,
         price: request.price,
         PlaceId: request.placeId,
         date: request.date,
         time: request.time,
         maxUsers: request.maxUsers,
+        currentUsersCount: 0,
+        isClosed: false,
         minAge: request.minAge,
-        // createdBy: user.Id,
+        createdBy: request.userId,
+        comment: "",
         isApprovedByModerator: false,
-        photo: Uint8Array.from(atob(request.photo.substring(0, 23)), c => c.charCodeAt(0)),
-        photoName: request.photoName
-    }).then(x => res.send(x))
+        photo: request.photo.substring(23),
+        photoName: request.photoName,
+    }).then(x => {
+        let result = x.dataValues;
+        result.placeId = result.PlaceId;
+        result.choreographerId = result.ChoreographerId;
+
+        res.send(result);
+    })
 })
 
 app.get("/workshop/getall/:organizerId", (req, res) => {
-    WorkshopService.getAll(req.params.organizerId).then(x => res.send(x));
+    WorkshopService.getAll(req.params.organizerId).then(resp => {
+        let result = resp.map(x => {
+            let workshop = x.dataValues;
+
+            workshop.placeId = workshop.PlaceId;
+            workshop.place = workshop.Place;
+            workshop.registrations = workshop.Registrations;
+            workshop.choreographerId = workshop.ChoreographerId;
+            workshop.choreographer = workshop.Choreographer;
+
+            return workshop;
+        });
+
+        res.send(result);
+    });
 })
 
 app.get("/workshop/getAll-users-accounting/:organizerId", (req, res) => {
-    WorkshopService.getAllForUsersAccounting(req.params.organizerId).then(x => res.send(x));
+    WorkshopService.getAllForUsersAccounting(req.params.organizerId).then(x => {
+        let result = x.dataValues;
+        result.placeId = result.PlaceId;
+        result.place = result.Place;
+        result.registrations = result.Registrations;
+        result.choreographerId = result.ChoreographerId;
+        result.choreographer = result.Choreographer;
+
+
+        res.send(result);
+    });
 })
 
 app.post("/workshop/delete/:id", (req, res) => {
     WorkshopService.getById(req.params.id).then(x => {
+        console.log('AXXX', x)
         if(x == null){
             res.sendStatus(404);
             return;
         }
 
-        WorkshopService.deleteWorkshop(x).then(x => x);
+        WorkshopService.deleteWorkshop(x.dataValues).then(x => res.sendStatus(200));
     })
 })
 
@@ -211,33 +246,48 @@ app.get("/workshop/get/:id", (req, res) => {
             return;
         }
 
-        res.send(x);
+        let result = x.dataValues;
+        result.choreographer = result.Choreographer;
+        result.choreographerId = result.ChoreographerId;
+        result.place = result.Place;
+        result.placeId = result.PlaceId;
+        result.photo = Buffer.from(result.photo, "base64").toString()
+
+        res.send(result);
     });
 })
 
 app.post("/workshop/update", (req, res) => {
     const request = req.body;
-    WorkshopService.getById(request.id).then(workshopToUpdate => {
-        if(workshopToUpdate == null){
+    WorkshopService.getById(request.id).then(result => {
+        if(result == null){
             res.sendStatus(404);
             return;
         }
+
+        let workshopToUpdate = result.dataValues;
+
+        console.log('WIEOIEWOI', request);
 
         workshopToUpdate.category = request.category;
         workshopToUpdate.ChoreographerId = request.choreographerId;
         workshopToUpdate.style = request.style;
         workshopToUpdate.price = request.price;
-        workshopToUpdate.date = request.date.ToString();
-        workshopToUpdate.time = request.Time.ToString();
+        workshopToUpdate.date = request.date;
+        workshopToUpdate.time = request.time;
         workshopToUpdate.PlaceId = request.placeId;
         workshopToUpdate.minAge = request.minAge;
         workshopToUpdate.maxUsers = request.maxUsers;
         workshopToUpdate.isClosed = request.isClosed;
         workshopToUpdate.photoName = request.photoName;
-        workshopToUpdate.photo = request.photo.includes("data") ? Uint8Array.from(atob(request.photo.substring(0, 23)), c => c.charCodeAt(0))
-         : Uint8Array.from(atob(request.photo), c => c.charCodeAt(0));
+        workshopToUpdate.photo = new TextEncoder().encode(request.photo);
 
-        WorkshopService.update(workshopToUpdate).then(x => res.send(x));
+        WorkshopService.update(workshopToUpdate).then(x => {
+            workshopToUpdate.placeId = workshopToUpdate.PlaceId;
+            workshopToUpdate.choreographerId = workshopToUpdate.ChoreographerId;
+
+            res.send(workshopToUpdate);
+        });
     })
 })
 
@@ -247,25 +297,43 @@ app.get("/workshop/registered-users/:workshopId", (req, res) => {
 
 app.get("/workshop/available/:userId", (req, res) => {
     UserService.findById(req.params.userId).then(user => {
-        let result;
-
-        if(user.role == "User"){
-            WorkshopService.getAvailableWorkshopsForUser(req.params.userId, user.dateOfBirth).then(x => {
-                res.send(x)
+        WorkshopService.getAvailableWorkshopsForUser(req.params.userId, user.dataValues.dateOfBirth).then(resp => {
+            let result = resp.map(x => {
+                let workshop = x.dataValues;
+    
+                workshop.photo = Buffer.from(workshop.photo, "base64").toString();
+                workshop.placeId = workshop.PlaceId;
+                workshop.place = workshop.Place;
+                workshop.registrations = workshop.Registrations;
+                workshop.choreographerId = workshop.ChoreographerId;
+                workshop.choreographer = workshop.Choreographer;
+    
+                return workshop;
             });
-        }
-        else{
-            WorkshopService.getAvailableWorkshopsForUser(req.params.userId, null).then(x => {
-                res.send(x)
-            });
-        }
 
-        
+            res.send(result);
+        });
     });
 })
 
 app.get("/workshop/awaiting-approval", (req, res) => {
-    WorkshopService.getWorkshopsForApproval().then(x => res.send(x));
+    WorkshopService.getWorkshopsForApproval().then(resp => {
+        let result = resp.map(x => {
+            let workshop = x.dataValues;
+
+            workshop.photo = Buffer.from(workshop.photo, "base64").toString();
+            workshop.placeId = workshop.PlaceId;
+            workshop.place = workshop.Place;
+            workshop.registrations = workshop.Registrations;
+            workshop.choreographerId = workshop.ChoreographerId;
+            workshop.choreographer = workshop.Choreographer;
+
+            return workshop;
+        });
+
+
+        res.send(result)
+    });
 })
 
 app.get("/workshop/workshops-history/:organizerId", (req, res) => {
@@ -316,19 +384,21 @@ app.post("/choreographer/delete/:id", (req, res) => {
 app.post("/choreographer/update", (req, res) => {
     const request = req.body;
 
-    ChoreographerService.getById(request.id).then(choreoToUpdate => {
-        if(choreoToUpdate == null){
+    ChoreographerService.getById(request.id).then(result => {
+        if(result == null){
             res.sendStatus(400);
             return;
         }
+
+        let choreoToUpdate = result.dataValues;
 
         choreoToUpdate.dateOfBirth = request.dateOfBirth;
         choreoToUpdate.description = request.description;
         choreoToUpdate.link = request.link;
         choreoToUpdate.name = request.name;
         choreoToUpdate.style = request.style;
-
-        ChoreographerService.update(choreoToUpdate).then(x => res.send(x));
+        // console.log('asd',choreoToUpdate);
+        ChoreographerService.update(choreoToUpdate).then(x => res.send(choreoToUpdate));
     })
 })
 
@@ -350,13 +420,17 @@ app.post("/auth/register", (req, res) => {
 app.post("/auth/login", (req, res) => {
     // console.log(req.body)
     UserService.login(req.body).then(result => {
-        if(result.Status == "Unauthorized"){
-            res.sendStatus(401);
-            return;
-        }
+        console.log(result);
+        // if(result.Status == "Unauthorized"){
+        //     res.sendStatus(401);
+        //     return;
+        // }
 
         res.send(result);
-    }).catch(err => res.status(401).send({message: err.Status}))
+    }).catch(err => {
+        console.log(err);
+        res.status(401).send({message: err.Status})
+    })
 })
 
 
@@ -419,7 +493,7 @@ const seedModerator = async() => {
     if(await UserService.findByRole("Moderator")) return;
 
     const moderator = {
-        userName: "Moderator",
+        username: "Moderator",
         email: "moderator@gmail.com",
         role: "Moderator",
         passwordHash: UserService.generateHash("moderator"),

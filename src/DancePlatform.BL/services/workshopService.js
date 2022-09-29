@@ -5,7 +5,14 @@ const create = (workshop) =>
     databaseContext.Workshops.create(workshop);
 
 const deleteWorkshop = workshop =>
-    databaseContext.Workshops.destroy(workshop);
+    {
+        console.log('WSWS', workshop)
+        return databaseContext.Workshops.destroy({
+            where: {
+                id: workshop.id
+            }
+        });
+    }
 
 const getAll = (organizerId) =>
     databaseContext.Workshops.findAll({
@@ -38,36 +45,21 @@ const getById = (id) =>
         }
     }).then(x => x[0]);
 
-const getAvailableWorkshopsForUser = (userId, dateOfBirth = null) => {
-    const currentYear = new Date().getFullYear();
-    const userAge = dateOfBirth != null ? currentYear - dateOfBirth.getFullYear() : -1;
-    
-    const workshops = databaseContext.Workshops.findAll({
+const getAvailableWorkshopsForUser = (userId, dateOfBirth = null) =>
+    databaseContext.Workshops.findAll({
         include: [databaseContext.Choreographers, databaseContext.Registrations, databaseContext.Places],
         where: {
             isClosed: false,
             isApprovedByModerator: true,
         }
-    }).then(x => x.filter(i => i.currentUsersCount < i.maxUsers && i.minAge <= userAge));
-
-    var result = [];
-
-    workshops.then(x => x.forEach(item => {
-        if(item.Registrations.length == 0){
-            result.push(item);
-        }
-        else{
-            if(!item.Registrations.includes(x => x.UserId == userId)){
-                result.push(item);
-            }
-        }
-    }));
-
-    return result;
-}
+})
 
 const update = (workshop) =>
-    databaseContext.Workshops.update(workshop, {returning: true}).then(x => x[1]);
+    databaseContext.Workshops.update(workshop, {
+        where: {
+            id: workshop.id
+        }
+    });
 
 const getClosed = (organizerId) =>
     databaseContext.Workshops.findAll({
@@ -94,9 +86,9 @@ const getUserDesiredWorkshops = (userId) => {
 
 const approveWorkshop = (workshopId) => {
     return databaseContext.Workshops.findByPk(workshopId).then(x => {
-        x.isApprovedByModerator = true;
+        x.dataValues.isApprovedByModerator = true;
 
-        return update(x);
+        return update(x.dataValues);
     })
 }
 

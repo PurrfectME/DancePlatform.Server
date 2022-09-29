@@ -68,7 +68,7 @@ const login = model => {
             name: user.name,
             surname: user.surname,
             phoneNumber: user.phoneNumber,
-            photo: user.photo == null ? null :  Uint8Array.from(atob(user.photo), c => c.charCodeAt(0)),
+            photo: user.photo == null ? null : new TextEncoder().encode(user.photo.substring(0, 23)),
         };
 
         return Promise.resolve({token: generateAccessToken(userForResponse.userName), user: userForResponse});
