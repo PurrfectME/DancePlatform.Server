@@ -7,6 +7,7 @@ import PlaceService from "./DancePlatform.BL/services/placeService.js";
 import RegistrationService from "./DancePlatform.BL/services/registrationService.js";
 import WorkshopService from "./DancePlatform.BL/services/workshopService.js";
 import ChoreographerService from "./DancePlatform.BL/services/choreographerService.js";
+import UserService from "./DancePlatform.BL/services/userService.js";
 
 // создаем объект приложения
 const app = express();
@@ -231,7 +232,14 @@ app.get("workshop/registered-users/:workshopId", (req, res) => {
 })
 
 app.get("workshop/available/:userId", (req, res) => {
-    WorkshopService.getAvailableWorkshopsForUser(req.params.userId, null).then(x => res.send(x));
+    UserService.findById(req.params.userId).then(user => {
+        let result = [];
+
+        WorkshopService.getAvailableWorkshopsForUser(req.params.userId, null).then(x => {
+            res.send(x)
+        });
+    })
+    
     // var user = await _userManager.FindByIdAsync(userId.ToString());
     //         List<Workshop> result;
 
@@ -314,6 +322,34 @@ app.post("choreographer/update", (req, res) => {
         ChoreographerService.update(choreoToUpdate).then(x => res.send(x));
     })
 })
+
+
+// USERS
+app.post("auth/register", (req, res) => {
+    UserService.register(req.body).then(result => {
+        if(result.Status == "Error"){
+            res.send({
+                status: 400,
+                message: result.Message
+            });
+            return;
+        }
+
+        res.send(result);
+    })
+})
+
+app.post("auth/login", (req, res) => {
+    UserService.login(req.body).then(result => {
+        if(result.Status == "Unauthorized"){
+            res.sendStatus(401);
+            return;
+        }
+
+        res.send(result);
+    })
+})
+
 
 
 // начинаем прослушивать подключения на 3000 порту

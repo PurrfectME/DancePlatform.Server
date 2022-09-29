@@ -23,14 +23,18 @@ const User = {
         type: DataTypes.STRING,
         allowNull: false,
     },
+    email: {
+        type: DataTypes.STRING,
+        allowNull: false,
+    },
+    phoneNumber: {
+        type: DataTypes.STRING,
+        allowNull: true,
+    },
+    passwordHash: {
+        type: DataTypes.STRING,
+        allowNull: false,
+    }
 };
-
-/*
-public DateTimeOffset DateOfBirth { get; set; }
-        public byte[] Photo { get; set; }
-        public string Surname { get; set; }
-        public string Name { get; set; }
-        public List<Registration> Registrations { get; set; }
-*/
 
 export default User;
