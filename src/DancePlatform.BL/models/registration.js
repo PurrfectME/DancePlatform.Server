@@ -21,12 +21,4 @@ const Registration = {
     },
 };
 
-/*
-public int Id { get; set; }
-		public int UserId { get; set; }
-		public int WorkshopId { get; set; }
-        public Workshop Workshop { get; set; }
-        public User User { get; set; }
-*/
-
 export default Registration;

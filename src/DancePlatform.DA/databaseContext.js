@@ -19,16 +19,16 @@ const Users = sequelize.define('Users', User);
 
 //определяем связи между таблицами
 Places.hasMany(Workshops);
-Workshops.belongsTo(Places);
+Workshops.hasOne(Places);
 
 Choreographers.hasMany(Workshops);
-Workshops.belongsTo(Choreographers);
+Workshops.hasOne(Choreographers);
 
 Workshops.hasMany(Registrations);
-Registrations.belongsTo(Workshops);
+Registrations.hasOne(Workshops);
 
 Users.hasMany(Registrations);
-Registrations.belongsTo(Users);
+Registrations.hasOne(Users);
 
 
 const testDb = async () => await sequelize.authenticate();

@@ -9,9 +9,27 @@ import WorkshopService from "./DancePlatform.BL/services/workshopService.js";
 import ChoreographerService from "./DancePlatform.BL/services/choreographerService.js";
 import UserService from "./DancePlatform.BL/services/userService.js";
 import ProfileService from "./DancePlatform.BL/services/profileService.js";
+import cors from "cors";
+import https from "https";
+import fs from "fs";
+import bodyParser from "body-parser";
 
+import Express from "express";
 // создаем объект приложения
 const app = express();
+
+app.use(cors());
+app.use(express.json())
+// app.use(bodyParser.urlencoded({ extended: true }))
+
+
+// app.use(function(req, res, next) {
+//     res.header("Access-Control-Allow-Origin", "*");
+//     res.header("Access-Control-Allow-Headers", "access-control-allow-origin,authorization,content-type");
+//     res.header("Access-Control-Allow-Methods", "GET,HEAD,PUT,PATCH,POST,DELETE");
+//     res.header("Content-Type", "application/json;charset=utf-8");
+//     next();
+// })
 
 // определяем обработчик для маршрута "/"
 app.get("/", function(request, response){
@@ -321,7 +339,7 @@ app.post("choreographer/update", (req, res) => {
 
 
 // USERS
-app.post("auth/register", (req, res) => {
+app.post("/auth/register", (req, res) => {
     UserService.register(req.body).then(result => {
         if(result.Status == "Error"){
             res.send({
@@ -335,21 +353,21 @@ app.post("auth/register", (req, res) => {
     })
 })
 
-app.post("auth/login", (req, res) => {
-    UserService.login(req.body).then(result => {
-        if(result.Status == "Unauthorized"){
-            res.sendStatus(401);
-            return;
-        }
+app.post("/auth/login", (req, res) => {
+    console.log(req.body)
+    // UserService.login(req.body).then(result => {
+    //     if(result.Status == "Unauthorized"){
+    //         res.sendStatus(401);
+    //         return;
+    //     }
 
-        res.send(result);
-    })
+    //     res.send(result);
+    // })
 })
 
 
 // PROFILE
-
-app.get("user/registrations/:userId", (req, res) => {
+app.get("/user/registrations/:userId", (req, res) => {
     RegistrationService.getUserRegistrations(req.params.userId).then(regs => {
         if(regs == null){
             res.sendStatus(400);
@@ -360,14 +378,14 @@ app.get("user/registrations/:userId", (req, res) => {
     })
 });
 
-app.post("user/upload-image/:userId", (req, res) => {
+app.post("/user/upload-image/:userId", (req, res) => {
     req.body.base64Img = req.body.base64Img.substring(0, 23);
     const converted = Uint8Array.from(atob(req.body.base64Img), c => c.charCodeAt(0));
 
     ProfileService.uploadImage(converted).then(x => res.sendStatus(200));
 });
 
-app.get("user/get-photo/:id", (req, res) => {
+app.get("/user/get-photo/:id", (req, res) => {
     ProfileService.getUserPhoto(req.params.id).then(photo => {
         if(photo == null){
             res.sendStatus(400);
@@ -378,11 +396,11 @@ app.get("user/get-photo/:id", (req, res) => {
     })
 })
 
-app.post("user/delete-photo/:id", (req, res) => {
+app.post("/user/delete-photo/:id", (req, res) => {
     ProfileService.deleteUserPhoto(req.params.id).then(x => res.sendStatus(200));
 })
 
-app.post("user/update-user", (req, res) => {
+app.post("/user/update-user", (req, res) => {
     const request = req.body;
     UserService.findById(request.id).then(userToUpdate => {
         userToUpdate.surname = request.surname;
@@ -395,16 +413,22 @@ app.post("user/update-user", (req, res) => {
 })
 
 
-// начинаем прослушивать подключения на 3000 порту
-app.listen(3000);
+var privateKey = fs.readFileSync('../security/selfsigned.key');
+var certificate = fs.readFileSync('../security/selfsigned.crt');
+https.createServer({
+    key: privateKey,
+    cert: certificate
+}, app).listen(8443);
 
 
 const seedModerator = async() => {
-    if(!await UserService.findByRole("Moderator")) return;
+    if(await UserService.findByRole("Moderator")) return;
 
     const moderator = {
         userName: "Moderator",
         email: "moderator@gmail.com",
+        role: "Moderator",
+        passwordHash: UserService.generateHash("moderator")
     }
 
     await UserService.createUser(moderator);
@@ -418,9 +442,9 @@ const seedModerator = async() => {
         console.error('Unable to connect to the database:', error);
     }
 
-    await seedModerator();
 
     // await databaseContext.updateDatabase(true);
+    await seedModerator();
 
     // await databaseContext.Choreographers.create({
     //     name: "Lilya",

@@ -82,27 +82,27 @@ const update = user =>
     databaseContext.Users.update(user, {returning: true});
 
 const validateForm = model => {
-    if (!model.Name)
+    if (!model.name)
     {
         return (false, "Имя не заполнено");
     }
 
-    if (!model.Surname)
+    if (!model.surname)
     {
         return (false, "Фамилия не заполнена");
     }
 
-    if (model.DateOfBirth.Year == 0001)
+    if (model.dateOfBirth.year == 0)
     {
         return (false, "Дата не заполнена");
     }
 
-    if (model.DateOfBirth.Year > 2010)
+    if (model.dateOfBirth.year > 2010)
     {
         return (false, "Некорректная дата");
     }
 
-    if (!model.Email)
+    if (!model.email)
     {
         return (false, "Почта не заполнена");
     }
@@ -124,7 +124,8 @@ const UserService = {
     findById,
     findByRole,
     createUser,
-    update
+    update,
+    generateHash
 };
 
 export default UserService;
