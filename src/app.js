@@ -233,26 +233,21 @@ app.get("workshop/registered-users/:workshopId", (req, res) => {
 
 app.get("workshop/available/:userId", (req, res) => {
     UserService.findById(req.params.userId).then(user => {
-        let result = [];
+        let result;
 
-        WorkshopService.getAvailableWorkshopsForUser(req.params.userId, null).then(x => {
-            res.send(x)
-        });
-    })
-    
-    // var user = await _userManager.FindByIdAsync(userId.ToString());
-    //         List<Workshop> result;
+        if(user.role == "User"){
+            WorkshopService.getAvailableWorkshopsForUser(req.params.userId, user.dateOfBirth).then(x => {
+                res.send(x)
+            });
+        }
+        else{
+            WorkshopService.getAvailableWorkshopsForUser(req.params.userId, null).then(x => {
+                res.send(x)
+            });
+        }
 
-    //         if(await _userManager.IsInRoleAsync(user, "User"))
-    //         {
-    //             result = await _service.GetAvailableWorkshopsForUser(userId, user.DateOfBirth);
-    //         }
-    //         else
-    //         {
-    //             result = await _service.GetAvailableWorkshopsForUser(userId, null);
-    //         }
-
-    //         return Ok(result);
+        
+    });
 })
 
 app.get("workshop/awaiting-approval", (req, res) => {
@@ -356,6 +351,17 @@ app.post("auth/login", (req, res) => {
 app.listen(3000);
 
 
+const seedModerator = async() => {
+    if(!await UserService.findByRole("Moderator")) return;
+
+    const moderator = {
+        userName: "Moderator",
+        email: "moderator@gmail.com",
+    }
+
+    await UserService.createUser(moderator);
+}
+
 (async() => {
     try {
         await databaseContext.testDb();
@@ -363,6 +369,8 @@ app.listen(3000);
       } catch (error) {
         console.error('Unable to connect to the database:', error);
     }
+
+    await seedModerator();
 
     // await databaseContext.updateDatabase(true);
 

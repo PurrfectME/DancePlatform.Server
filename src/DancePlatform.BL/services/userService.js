@@ -35,7 +35,8 @@ const register = (user) => {
             username: user.username,
             name: user.name,
             email: user.email,
-            passwordHash: generateHash(user.password)
+            passwordHash: generateHash(user.password),
+            role: user.isOrganizer ? "Organizer" : "User"
         };
 
         return createUser(userToCreate).then(x => x);
@@ -106,12 +107,20 @@ const validateForm = model => {
     return [true, ""];
 }
 
+const findByRole = role =>
+    databaseContext.Users.findOne({
+        where:{
+            role: role
+        }
+    })
 
 const UserService = {
     generateAccessToken,
     register,
     login,
-    findById
+    findById,
+    findByRole,
+    createUser
 };
 
 export default UserService;

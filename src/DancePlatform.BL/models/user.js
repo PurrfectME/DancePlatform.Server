@@ -9,23 +9,23 @@ const User = {
     },
     dateOfBirth: {
         type: DataTypes.DATE,
-        allowNull: false,
+        allowNull: true,
     },
     photo: {
         type: DataTypes.BLOB("long"),
-        allowNull: false,
+        allowNull: true,
     },
     surname: {
         type: DataTypes.STRING,
-        allowNull: false,
+        allowNull: true,
     },
     name: {
         type: DataTypes.STRING,
-        allowNull: false,
+        allowNull: true,
     },
     email: {
         type: DataTypes.STRING,
-        allowNull: false,
+        allowNull: true,
     },
     phoneNumber: {
         type: DataTypes.STRING,
@@ -33,7 +33,11 @@ const User = {
     },
     passwordHash: {
         type: DataTypes.STRING,
-        allowNull: false,
+        allowNull: true,
+    },
+    role: {
+        type: DataTypes.STRING,
+        allowNull: true
     }
 };
 
