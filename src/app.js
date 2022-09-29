@@ -6,6 +6,7 @@ import databaseContext from "./DancePlatform.DA/databaseContext.js";
 import PlaceService from "./DancePlatform.BL/services/placeService.js";
 import RegistrationService from "./DancePlatform.BL/services/registrationService.js";
 import WorkshopService from "./DancePlatform.BL/services/workshopService.js";
+import ChoreographerService from "./DancePlatform.BL/services/choreographerService.js";
 
 // создаем объект приложения
 const app = express();
@@ -273,6 +274,47 @@ app.post("workshop/approve/:workshopId", (req, res) => {
 app.post("workshop/decline/:workshopId/:comment", (req, res) => {
     WorkshopService.declineWorkshop(req.params.workshopId, req.params.comment).then(x => res.sendStatus(200));
 })
+
+
+// CHOREOGRAPHERS
+app.post("choreographer/add", (req, res) => {
+    ChoreographerService.create(req.body).then(x => res.send(x));
+})
+
+app.get("choreographer/getall/:organizerId", (req, res) => {
+    ChoreographerService.getAll(req.params.organizerId).then(x => res.send(x));
+})
+
+app.post("choreographer/delete/:id", (req, res) => {
+    ChoreographerService.getById(req.params.id).then(x => {
+        if(x == null){
+            res.sendStatus(404);
+            return;
+        }
+
+        ChoreographerService.deleteChoreographer(x).then(x => res.sendStatus(200));
+    })
+})
+
+app.post("choreographer/update", (req, res) => {
+    const request = req.body;
+
+    ChoreographerService.getById(request.id).then(choreoToUpdate => {
+        if(choreoToUpdate == null){
+            res.sendStatus(400);
+            return;
+        }
+
+        choreoToUpdate.dateOfBirth = request.dateOfBirth;
+        choreoToUpdate.description = request.description;
+        choreoToUpdate.link = request.link;
+        choreoToUpdate.name = request.name;
+        choreoToUpdate.style = request.style;
+
+        ChoreographerService.update(choreoToUpdate).then(x => res.send(x));
+    })
+})
+
 
 // начинаем прослушивать подключения на 3000 порту
 app.listen(3000);
