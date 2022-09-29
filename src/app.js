@@ -8,6 +8,7 @@ import RegistrationService from "./DancePlatform.BL/services/registrationService
 import WorkshopService from "./DancePlatform.BL/services/workshopService.js";
 import ChoreographerService from "./DancePlatform.BL/services/choreographerService.js";
 import UserService from "./DancePlatform.BL/services/userService.js";
+import ProfileService from "./DancePlatform.BL/services/profileService.js";
 
 // создаем объект приложения
 const app = express();
@@ -345,6 +346,53 @@ app.post("auth/login", (req, res) => {
     })
 })
 
+
+// PROFILE
+
+app.get("user/registrations/:userId", (req, res) => {
+    RegistrationService.getUserRegistrations(req.params.userId).then(regs => {
+        if(regs == null){
+            res.sendStatus(400);
+            return;
+        }
+
+        res.send(regs);
+    })
+});
+
+app.post("user/upload-image/:userId", (req, res) => {
+    req.body.base64Img = req.body.base64Img.substring(0, 23);
+    const converted = Uint8Array.from(atob(req.body.base64Img), c => c.charCodeAt(0));
+
+    ProfileService.uploadImage(converted).then(x => res.sendStatus(200));
+});
+
+app.get("user/get-photo/:id", (req, res) => {
+    ProfileService.getUserPhoto(req.params.id).then(photo => {
+        if(photo == null){
+            res.sendStatus(400);
+            return;
+        }
+
+        res.send(Uint8Array.from(atob(photo), c => c.charCodeAt(0)));        
+    })
+})
+
+app.post("user/delete-photo/:id", (req, res) => {
+    ProfileService.deleteUserPhoto(req.params.id).then(x => res.sendStatus(200));
+})
+
+app.post("user/update-user", (req, res) => {
+    const request = req.body;
+    UserService.findById(request.id).then(userToUpdate => {
+        userToUpdate.surname = request.surname;
+        userToUpdate.phoneNumber = request.phoneNumber;
+        userToUpdate.name = request.name;
+        userToUpdate.dateOfBirth = request.dateOfBirth;
+
+        UserService.update(userToUpdate).then(x => res.send(x));
+    })
+})
 
 
 // начинаем прослушивать подключения на 3000 порту

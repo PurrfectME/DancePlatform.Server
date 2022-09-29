@@ -78,6 +78,9 @@ const createUser = user => {
     return databaseContext.Users.create(user);
 }
 
+const update = user =>
+    databaseContext.Users.update(user, {returning: true});
+
 const validateForm = model => {
     if (!model.Name)
     {
@@ -120,7 +123,8 @@ const UserService = {
     login,
     findById,
     findByRole,
-    createUser
+    createUser,
+    update
 };
 
 export default UserService;
