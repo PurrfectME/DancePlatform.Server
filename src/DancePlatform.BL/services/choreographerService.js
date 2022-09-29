@@ -11,7 +11,7 @@ const deleteChoreographer = choreographer =>
     databaseContext.Choreographers.destroy(choreographer);
 
 const getAll = organizerId =>
-    databaseContext.Choreographers.findOne({
+    databaseContext.Choreographers.findAll({
         where: {
             createdBy: organizerId
         }

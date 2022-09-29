@@ -15,19 +15,20 @@ function generateHash(string) {
 }
 
 const generateAccessToken = (username) => {
-    return jwt.sign(username, "ExTRA_COOL_SECRET_KEY", { expiresIn: '3800s' });
+    
+    return jwt.sign(username, "ExTRA_COOL_SECRET_KEY");
 }
 
 const register = (user) => {
     const validationResult = validateForm(user);
-
-    if(!validationResult[0]){
-        return {Status: "Error", Message: validationResult[1]}
+    console.log(validationResult, user)
+    if(validationResult){
+        return Promise.resolve({Status: "Error", Message: validationResult});
     }
 
     return findByEmail(user.email).then(userExists => {
         if(userExists != null){
-            return { Status: "Error", Message: "Пользователь уже существует!" };
+            return Promise.resolve({ Status: "Error", Message: "Пользователь уже существует!" });
         }
 
         const userToCreate = {
@@ -35,27 +36,34 @@ const register = (user) => {
             username: user.username,
             name: user.name,
             email: user.email,
+            surname: user.surname,
             passwordHash: generateHash(user.password),
             role: user.isOrganizer ? "Organizer" : "User"
         };
 
-        return createUser(userToCreate).then(x => x);
+        return createUser(userToCreate);
     })
 }
 
 const login = model => {
-    return findByEmail(model.email).then(user => {
+    return findByEmail(model.email).then(u => {
 
-
-        if(user == null || user.passwordHash != generateHash(model.password)){
-            return { Status: "Unauthorized"};
+        if(!u){
+            return Promise.reject({ Status: "Нет такой почты"});
         }
 
+        const user = u.dataValues;
+
+        if(user == null || user.passwordHash != generateHash(model.password)){
+            return Promise.reject({ Status: "Некорректный пароль"});
+        }
         const userForResponse =
         {
+            role: user.role,
+            registrations: user.registrations,
             email: user.email,
             id: user.id,
-            userName: user.userName,
+            userName: user.username,
             dateOfBirth: user.dateOfBirth,
             name: user.name,
             surname: user.surname,
@@ -63,7 +71,7 @@ const login = model => {
             photo: user.photo == null ? null :  Uint8Array.from(atob(user.photo), c => c.charCodeAt(0)),
         };
 
-        return {token: generateAccessToken(userForResponse.userName), user: userForResponse};
+        return Promise.resolve({token: generateAccessToken(userForResponse.userName), user: userForResponse});
     })
 }
 
@@ -71,7 +79,11 @@ const findById = id =>
     databaseContext.Users.findByPk(id);
 
 const findByEmail = email =>
-    databaseContext.Users.findOne(email);
+    databaseContext.Users.findOne({
+        where: {
+            email: email
+        }
+    });
 
 
 const createUser = user => {
@@ -84,30 +96,35 @@ const update = user =>
 const validateForm = model => {
     if (!model.name)
     {
-        return (false, "Имя не заполнено");
+        return "Имя не заполнено";
+    }
+
+    if (!model.username)
+    {
+        return "Логин не заполнен";
     }
 
     if (!model.surname)
     {
-        return (false, "Фамилия не заполнена");
+        return "Фамилия не заполнена";
     }
 
     if (model.dateOfBirth.year == 0)
     {
-        return (false, "Дата не заполнена");
+        return "Дата не заполнена";
     }
 
     if (model.dateOfBirth.year > 2010)
     {
-        return (false, "Некорректная дата");
+        return "Некорректная дата";
     }
 
     if (!model.email)
     {
-        return (false, "Почта не заполнена");
+        return "Почта не заполнена";
     }
 
-    return [true, ""];
+    return "";
 }
 
 const findByRole = role =>

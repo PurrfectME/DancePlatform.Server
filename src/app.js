@@ -1,7 +1,5 @@
 // подключение express
 import express from "express";
-import Style from "./DancePlatform.BL/models/style.js";
-import Category from "./DancePlatform.BL/models/category.js";
 import databaseContext from "./DancePlatform.DA/databaseContext.js";
 import PlaceService from "./DancePlatform.BL/services/placeService.js";
 import RegistrationService from "./DancePlatform.BL/services/registrationService.js";
@@ -12,33 +10,20 @@ import ProfileService from "./DancePlatform.BL/services/profileService.js";
 import cors from "cors";
 import https from "https";
 import fs from "fs";
-import bodyParser from "body-parser";
 
-import Express from "express";
 // создаем объект приложения
 const app = express();
 
 app.use(cors());
 app.use(express.json())
-// app.use(bodyParser.urlencoded({ extended: true }))
-
-
-// app.use(function(req, res, next) {
-//     res.header("Access-Control-Allow-Origin", "*");
-//     res.header("Access-Control-Allow-Headers", "access-control-allow-origin,authorization,content-type");
-//     res.header("Access-Control-Allow-Methods", "GET,HEAD,PUT,PATCH,POST,DELETE");
-//     res.header("Content-Type", "application/json;charset=utf-8");
-//     next();
-// })
 
 // определяем обработчик для маршрута "/"
 app.get("/", function(request, response){
-     
     // отправляем ответ
     response.send("<h2>Привет Express!</h2>");
 });
 
-const placeRouter = express.Router();
+//Ниже описаны все урлы нашего сервера, к которым фронт может обращаться
 
 // PLACES
 app.get("/place/getAll/:organizerId", (request, response) => {
@@ -55,6 +40,7 @@ app.post("/place/add", (request, response) => {
 
 app.post("/place/update", (request, response) => {
     PlaceService.getById(request.body.id).then(placeToUpdate => {
+
         if(placeToUpdate == null){
             response.sendStatus(404);
             return;
@@ -62,8 +48,17 @@ app.post("/place/update", (request, response) => {
 
         placeToUpdate.studioName = request.body.studioName;
         placeToUpdate.address = request.body.address;
+        console.log('HERERER');
 
-        PlaceService.update(placeToUpdate).then(x => {response.send(x)});
+
+        return PlaceService.update(placeToUpdate).then(x => {
+            if(x != 0){
+                response.send(placeToUpdate);
+            }
+            else{
+                response.sendStatus(400);
+            }
+        });
     });
 });
 
@@ -80,7 +75,7 @@ app.post("/place/delete/:id", (request, response) => {
 
 //REGISTRATIONS
 
-app.post("registration/add", (req, res) => {
+app.post("/registration/add", (req, res) => {
     const registration = req.body;
 
     RegistrationService.getByUserAndWorkshopIds(registration.userId, registration.workshopId).then(existingRegistration => {
@@ -117,11 +112,11 @@ app.post("registration/add", (req, res) => {
     });
 })
 
-app.get("registration/getAll", (req, res) => {
+app.get("/registration/getAll", (req, res) => {
     RegistrationService.getAll().then(x => res.send(x));
 })
 
-app.post("registration/delete/:id", (req, res) => {
+app.post("/registration/delete/:id", (req, res) => {
     RegistrationService.getById(req.params.id).then(itemToDelete => {
         if(itemToDelete == null){
             res.sendStatus(404);
@@ -132,15 +127,15 @@ app.post("registration/delete/:id", (req, res) => {
     })
 })
 
-app.get("registration/get/:id", (req, res) => {
+app.get("/registration/get/:id", (req, res) => {
     RegistrationService.getById(req.params.id).then(x => res.send(x));
 })
 
-app.put("registration/update", (req, res) => {
+app.put("/registration/update", (req, res) => {
     RegistrationService.update(req.body).then(x => res.send(x));
 })
 
-app.get("registration/:userId", (req, res) => {
+app.get("/registration/:userId", (req, res) => {
     RegistrationService.getUserWorkshops(req.params.userId).then(x => {
         if(x == null){
             res.sendStatus(404);
@@ -151,23 +146,23 @@ app.get("registration/:userId", (req, res) => {
     })
 })
 
-app.post("registration/checkout-users", (req, res) => {
+app.post("/registration/checkout-users", (req, res) => {
     for(let i = 0; i < req.body.length; i++){
         RegistrationService.checkoutUsers(req.body[i].userId, req.body[i].workshopId).then(x => x);
     }
 })
 
-app.get("registration/visited/:userId", (req, res) => {
+app.get("/registration/visited/:userId", (req, res) => {
     RegistrationService.getUserVisitedWorkshops(req.params.userId).then(x => res.send(x));
 })
 
-app.post("registration/remove-desired/:userId/:workshopId", (req, res) => {
+app.post("/registration/remove-desired/:userId/:workshopId", (req, res) => {
     RegistrationService.removeFromDesired(req.params.userId, req.params.workshopId).then(x => res.sendStatus(200));
 })
 
 // WORKSHOPS
 
-app.post("workshop/add", (req, res) => {
+app.post("/workshop/add", (req, res) => {
     //get user by email
 
     //prepare photo base 64
@@ -190,15 +185,15 @@ app.post("workshop/add", (req, res) => {
     }).then(x => res.send(x))
 })
 
-app.get("workshop/getall/:organizerId", (req, res) => {
+app.get("/workshop/getall/:organizerId", (req, res) => {
     WorkshopService.getAll(req.params.organizerId).then(x => res.send(x));
 })
 
-app.get("workshop/getAll-users-accounting/:organizerId", (req, res) => {
+app.get("/workshop/getAll-users-accounting/:organizerId", (req, res) => {
     WorkshopService.getAllForUsersAccounting(req.params.organizerId).then(x => res.send(x));
 })
 
-app.post("workshop/delete/:id", (req, res) => {
+app.post("/workshop/delete/:id", (req, res) => {
     WorkshopService.getById(req.params.id).then(x => {
         if(x == null){
             res.sendStatus(404);
@@ -209,7 +204,7 @@ app.post("workshop/delete/:id", (req, res) => {
     })
 })
 
-app.get("workshop/get/:id", (req, res) => {
+app.get("/workshop/get/:id", (req, res) => {
     WorkshopService.getById(req.params.id).then(x => {
         if(x == null){
             res.sendStatus(404);
@@ -220,7 +215,7 @@ app.get("workshop/get/:id", (req, res) => {
     });
 })
 
-app.post("workshop/update", (req, res) => {
+app.post("/workshop/update", (req, res) => {
     const request = req.body;
     WorkshopService.getById(request.id).then(workshopToUpdate => {
         if(workshopToUpdate == null){
@@ -246,11 +241,11 @@ app.post("workshop/update", (req, res) => {
     })
 })
 
-app.get("workshop/registered-users/:workshopId", (req, res) => {
+app.get("/workshop/registered-users/:workshopId", (req, res) => {
     WorkshopService.getWorkshopUsers(req.params.workshopId).then(x => res.send(x));
 })
 
-app.get("workshop/available/:userId", (req, res) => {
+app.get("/workshop/available/:userId", (req, res) => {
     UserService.findById(req.params.userId).then(user => {
         let result;
 
@@ -269,15 +264,15 @@ app.get("workshop/available/:userId", (req, res) => {
     });
 })
 
-app.get("workshop/awaiting-approval", (req, res) => {
+app.get("/workshop/awaiting-approval", (req, res) => {
     WorkshopService.getWorkshopsForApproval().then(x => res.send(x));
 })
 
-app.get("workshop/workshops-history/:organizerId", (req, res) => {
+app.get("/workshop/workshops-history/:organizerId", (req, res) => {
     WorkshopService.getClosed(req.params.organizerId).then(x => res.send(x));
 })
 
-app.get("workshop/desired/:userId", (req, res) => {
+app.get("/workshop/desired/:userId", (req, res) => {
     WorkshopService.getUserDesiredWorkshops(req.params.userId).then(x => {
         if(x == null){
             res.sendStatus(404);
@@ -289,25 +284,25 @@ app.get("workshop/desired/:userId", (req, res) => {
 })
 
 
-app.post("workshop/approve/:workshopId", (req, res) => {
+app.post("/workshop/approve/:workshopId", (req, res) => {
     WorkshopService.approveWorkshop(req.params.workshopId).then(x => res.sendStatus(200));
 })
 
-app.post("workshop/decline/:workshopId/:comment", (req, res) => {
+app.post("/workshop/decline/:workshopId/:comment", (req, res) => {
     WorkshopService.declineWorkshop(req.params.workshopId, req.params.comment).then(x => res.sendStatus(200));
 })
 
 
 // CHOREOGRAPHERS
-app.post("choreographer/add", (req, res) => {
+app.post("/choreographer/add", (req, res) => {
     ChoreographerService.create(req.body).then(x => res.send(x));
 })
 
-app.get("choreographer/getall/:organizerId", (req, res) => {
+app.get("/choreographer/getall/:organizerId", (req, res) => {
     ChoreographerService.getAll(req.params.organizerId).then(x => res.send(x));
 })
 
-app.post("choreographer/delete/:id", (req, res) => {
+app.post("/choreographer/delete/:id", (req, res) => {
     ChoreographerService.getById(req.params.id).then(x => {
         if(x == null){
             res.sendStatus(404);
@@ -318,7 +313,7 @@ app.post("choreographer/delete/:id", (req, res) => {
     })
 })
 
-app.post("choreographer/update", (req, res) => {
+app.post("/choreographer/update", (req, res) => {
     const request = req.body;
 
     ChoreographerService.getById(request.id).then(choreoToUpdate => {
@@ -342,8 +337,7 @@ app.post("choreographer/update", (req, res) => {
 app.post("/auth/register", (req, res) => {
     UserService.register(req.body).then(result => {
         if(result.Status == "Error"){
-            res.send({
-                status: 400,
+            res.status(400).send({
                 message: result.Message
             });
             return;
@@ -354,15 +348,15 @@ app.post("/auth/register", (req, res) => {
 })
 
 app.post("/auth/login", (req, res) => {
-    console.log(req.body)
-    // UserService.login(req.body).then(result => {
-    //     if(result.Status == "Unauthorized"){
-    //         res.sendStatus(401);
-    //         return;
-    //     }
+    // console.log(req.body)
+    UserService.login(req.body).then(result => {
+        if(result.Status == "Unauthorized"){
+            res.sendStatus(401);
+            return;
+        }
 
-    //     res.send(result);
-    // })
+        res.send(result);
+    }).catch(err => res.status(401).send({message: err.Status}))
 })
 
 
@@ -428,7 +422,7 @@ const seedModerator = async() => {
         userName: "Moderator",
         email: "moderator@gmail.com",
         role: "Moderator",
-        passwordHash: UserService.generateHash("moderator")
+        passwordHash: UserService.generateHash("moderator"),
     }
 
     await UserService.createUser(moderator);

@@ -11,7 +11,7 @@ const getAll = (organizedId) =>
     });
 
 const getById = (id) =>
-    databaseContext.Places.findByPk(id);
+    databaseContext.Places.findByPk(id).then(x => x.dataValues);
 
 const update = (place) =>
     databaseContext.Places.update(place, {
@@ -20,8 +20,7 @@ const update = (place) =>
                 [Op.eq]: place.id
             }
         },
-        returning: true
-    }).then(x => x[1]);
+    });
 
 const create = (place) =>
     databaseContext.Places.create(place);

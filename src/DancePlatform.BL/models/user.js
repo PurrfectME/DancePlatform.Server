@@ -19,7 +19,7 @@ const User = {
         type: DataTypes.STRING,
         allowNull: true,
     },
-    name: {
+    username: {
         type: DataTypes.STRING,
         allowNull: true,
     },
@@ -36,6 +36,10 @@ const User = {
         allowNull: true,
     },
     role: {
+        type: DataTypes.STRING,
+        allowNull: true
+    },
+    name: {
         type: DataTypes.STRING,
         allowNull: true
     }
